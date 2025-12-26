@@ -1,4 +1,5 @@
-import matplotlib
+import matplotlib.pyplot as plt
+from matplotlib.patches import Rectangle
 
 '''
 CREATE PLOTTING ENVIRONMENT
@@ -28,3 +29,28 @@ rect = Rectangle((x, y), width, height, facecolor='red', edgecolor='black')
 rect.set_facecolor('red')
 rect.set_edgecolor('black')
 '''
+
+'''
+given a point in 3D space, the projection of that point on the screen is
+(x', y') = (x/z, y/z)
+'''
+
+'''
+-0.5 -> 0.5    0 -> 1
+'''
+# takes cartesian (x, y) and turns it into values plt can accurately show
+def cartesian_to_plt(x, y):
+    # shift up 0.5, then shift down by half its width and shift left by half its length
+    return (x+0.5, y+0.5)
+
+fig, ax = plt.subplots()
+ax.set_aspect('equal')
+
+def plot_rectangle_at_point(x, y, width, height):  
+    pyt_points = cartesian_to_plt(x, y)
+    shifted_pyt_points = (pyt_points[0] - width/2, pyt_points[1] - height/2)
+    rect = Rectangle(shifted_pyt_points, width, height)
+    ax.add_patch(rect)
+    return rect
+
+plt.show()
