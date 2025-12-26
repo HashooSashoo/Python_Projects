@@ -69,6 +69,28 @@ class Point3D:
         self.y = self.y
         self.z = self.z * math.sin(rho) + self.z * math.cos(rho)
 
+    def rotateOnAllAxes(self, theta):
+        self.x = self.x * math.cos(theta) - self.y * math.sin(theta)
+        self.y = self.x * math.sin(theta) + self.y * math.cos(theta)
+
+        self.y = self.y * math.cos(theta) - self.z * math.sin(theta)
+        self.z = self.y * math.sin(theta) + self.z * math.cos(theta)
+
+        self.x = self.x * math.cos(theta) - self.z * math.sin(theta)
+        self.z = self.z * math.sin(theta) + self.z * math.cos(theta)
+
+
+class Cube():
+    def __init__(self, origin: Point3D, sideLength: float, 
+                 xRot: float, yRot: float, zRot: float):
+        self.origin = origin
+        self.sideLength = sideLength
+
+        self.vertex1 = Point3D(origin.x + sideLength / 2, origin.x + sideLength / 2, origin.z + sideLength / 2)
+
+        
+
+        
 
 
 # 3D points we will define
@@ -81,9 +103,10 @@ vertex6 = Point3D(0.25, 0.25, 1.5)
 vertex7 = Point3D(0.25, -0.25, 1.5)
 vertex8 = Point3D(-0.25, -0.25, 1.5)
 
+# i know kinda jank that point2d isnt defined as a class but whatever lol
 def three_dim_to_two_dim(point3D):
-    newX = point3D[0] / point3D[2]
-    newY = point3D[1] / point3D[2]
+    newX = point3D.x / point3D.z
+    newY = point3D.y / point3D.z
     return (newX, newY)
 
 # Initialize graphing environment
@@ -104,5 +127,12 @@ def plot_rectangle_at_point(x, y, width, height):
     rect = Rectangle(shifted_pyt_points, width, height)
     ax.add_patch(rect)
     return rect
+
+
+
+def animate(frame):
+    t = frame * 0.1
+
+
 
 plt.show()
