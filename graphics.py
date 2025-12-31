@@ -71,6 +71,7 @@ class Cube():
         self.sideLength = sideLength
 
         self.vertex1 = Point3D(origin.x + sideLength / 2, origin.x + sideLength / 2, origin.z + sideLength / 2)
+        
 
         
 
