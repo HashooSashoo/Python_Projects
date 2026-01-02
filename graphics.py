@@ -1,6 +1,23 @@
 import math
 import matplotlib.pyplot as plt
 from matplotlib.patches import Rectangle
+import os
+import sys
+import time
+from typing import Tuple
+
+# Something to clear the terminal
+if sys.platform in ('linux', 'darwin'):
+    CLEAR = 'clear'
+elif sys.platform == 'win32':
+    CLEAR = 'cls'
+else:
+    print('Platfrom not supported', file=sys.stderr)
+    exit(1)
+
+
+def clear_terminal() -> None:
+    os.system(CLEAR)
 
 '''
 SCRAP IT, we will use the terminal instead
@@ -94,6 +111,36 @@ def three_dim_to_two_dim(point3D):
     newY = point3D.y / point3D.z
     return (newX, newY)
 
+class Map:
+    def __init__(self, dimension: int, content: str):
+        if not isinstance(dimension, int):
+            raise TypeError("Dimension must be an integer value at least 10 or higher.")
+        elif dimension < 10:
+            raise ValueError("Dimension must be an integer value at least 10 or higher.")
+        else:
+            self.dimension = dimension
+        
+        self.content = content
+
+    # We will assume that we will be using all of our coordinates in a [-2,2] <- X, [-2,2] <- Y range
+    def cartesian_to_poxels(coords: Tuple[float, float]) -> Tuple[int, int]:
+        # Remember, [-2,2] -> {1,2,...,101} (for X), [-2,2] -> {1,2,...,51} (for Y)
+        scaledAndRoundedX = round((coords[0] + 2) * 25)
+        scaledAndRoundedY = (coords[1] + 2) * (float(50)/4)
+        return (scaledAndRoundedX+1, scaledAndRoundedY+1)
+
+    
+    def draw_point(self, coords: Tuple[float, float]):
+        string_indices = self.cartesian_to_poxels(coords)
+        self.content
+
+
+class Scene:
+    def __init__(self, dimensions: Tuple[int, int], content: Map):
+        self.dimensions = dimensions
+        self.content = content
+
+
 # Now let's configure the terminal as a place to store our games.
 
 for i in range(51):
@@ -101,6 +148,25 @@ for i in range(51):
         print(("@" * 50) + ("-") + ("@" * 50))
     print("@" * 101)
 
+def draw_point(clear: bool, coords: Tuple[float, float], map: str):
+    return
 
 
-plt.show()
+
+
+def update_scene(newMap: str):
+    clear_terminal()
+    print(newMap)
+
+def draw_line():
+    return
+
+CLEAR_MAP = (" " * 101 + "\n") * 51
+FULL_MAP = ("@" * 101 + "\n") * 51
+
+
+
+
+
+
+
