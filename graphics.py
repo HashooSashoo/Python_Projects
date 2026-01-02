@@ -94,29 +94,12 @@ def three_dim_to_two_dim(point3D):
     newY = point3D.y / point3D.z
     return (newX, newY)
 
-# Initialize graphing environment
-fig, ax = plt.subplots()
-ax.set_aspect('equal')
+# Now let's configure the terminal as a place to store our games.
 
-# The following two functions graph a rectangle at a certain cartesian point 
-# (assuming origin is at center and range is -0.5 to 0.5 for both axes)
-
-# takes cartesian (x, y) and turns it into values plt can accurately show
-def cartesian_to_plt(x, y):
-    # shift up 0.5, then shift down by half its width and shift left by half its length
-    return (x+0.5, y+0.5)
-
-def plot_rectangle_at_point(x, y, width, height):  
-    pyt_points = cartesian_to_plt(x, y)
-    shifted_pyt_points = (pyt_points[0] - width/2, pyt_points[1] - height/2)
-    rect = Rectangle(shifted_pyt_points, width, height)
-    ax.add_patch(rect)
-    return rect
-
-
-
-def animate(frame):
-    t = frame * 0.1
+for i in range(51):
+    if i == 26:
+        print(("@" * 50) + ("-") + ("@" * 50))
+    print("@" * 101)
 
 
 
