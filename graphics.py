@@ -1,7 +1,10 @@
 import math
 import time
 from typing import Tuple
+from typing import Self
+
 import keyboard
+
 
 
 def clear_terminal() -> None:
@@ -29,61 +32,76 @@ Order of points
 remove_duplicates = lambda x : list(dict.fromkeys(x))
 
 class Point3D:
-    def __init__(self, x: float, y: float, z: float):
+    def __init__(self, x: float, y: float, z: float) -> None:
         self.x = x
         self.y = y
         self.z = z
 
     #---------------------------POINT BASIC OPERATIONS-------------------------------------------
-    def __add__(self, other_point):
+    def __add__(self, other_point: Self) -> Self:
         return Point3D(self.x + other_point.x, self.y + other_point.y, self.z + other_point.z)
     
-    def __iadd__(self, other_point):
+    def __iadd__(self, other_point: Self) -> None:
         self.x += other_point.x
         self.y += other_point.y
         self.z += other_point.z
     
-    def add(self, other_point):
+    def add(self, other_point: Self) -> None:
         self.x += other_point.x
         self.y += other_point.y
         self.z += other_point.z
 
-    def __sub__(self, other_point):
+    def __sub__(self, other_point: Self) -> Self:
         return Point3D(self.x - other_point.x, self.y - other_point.y, self.z - other_point.z)
     
-    def __isub__(self, other_point):
+    def __isub__(self, other_point: Self) -> None:
         self.x -= other_point.x
         self.y -= other_point.y
         self.z -= other_point.z
     
-    def sub(self, other_point):
+    def sub(self, other_point: Self) -> None:
         self.x -= other_point.x
         self.y -= other_point.y
         self.z -= other_point.z
 
-    def __matmul__(self, other_point): # Dot product
+    #-------------------VECTOR OPERATIONS----------------------------------------
+
+    def __matmul__(self, other_point: Self) -> float: # Dot product
         return (self.x * other_point.x) + (self.y * other_point.y) + (self.z * other_point.z)
     
-    def dot(self, other_point):
+    def dot(self, other_point: Self) -> float:
         return (self.x * other_point.x) + (self.y * other_point.y) + (self.z * other_point.z)
 
-    def __mul__(self, other_point): # Cross product
+    def __mul__(self, other_point: Self) -> Self: # Cross product OR scalar multiplication
+        if isinstance(other_point, (float, int)):
+            return Point3D(self.x * other_point, self.y * other_point, self.z * other_point)
+        elif isinstance(other_point, Point3D):
+            return Point3D((self.y * other_point.z) - (self.z * other_point.y),
+                           (self.z * other_point.x) - (self.x * other_point.z),
+                           (self.x * other_point.y) - (self.y * other_point.x))
+        else:
+            raise ValueError
+        
+    def __truediv__(self, other_point: Self) -> Self:
+        if isinstance(other_point, (float, int)):
+            return Point3D(self.x / other_point, self.y / other_point, self.z / other_point)
+        else:
+            raise ValueError
+    
+    def cross(self, other_point: Self) -> Self:
         return Point3D((self.y * other_point.z) - (self.z * other_point.y),
                        (self.z * other_point.x) - (self.x * other_point.z),
                        (self.x * other_point.y) - (self.y * other_point.x))
-    
-    def cross(self, other_point):
-        return Point3D((self.y * other_point.z) - (self.z * other_point.y),
-                       (self.z * other_point.x) - (self.x * other_point.z),
-                       (self.x * other_point.y) - (self.y * other_point.x))
 
-    def translate(self, x_t: float, y_t: float, z_t: float):
+    #-------------------3D SPACE OPERATIONS--------------------------------------------
+
+    def translate(self, x_t: float, y_t: float, z_t: float) -> None:
         self.x = self.x + x_t
         self.y = self.y + y_t
         self.z = self.z + z_t
         
     # rotation along the Z axis
-    def rotateXY(self, theta: float):
+    def rotateXY(self, theta: float) -> None:
         old_x = self.x
         old_y = self.y
         self.x = old_x * math.cos(theta) - old_y * math.sin(theta)
@@ -91,7 +109,7 @@ class Point3D:
         self.z = self.z
     
     # rotation along the X axis
-    def rotateYZ(self, phi: float):
+    def rotateYZ(self, phi: float) -> None:
         old_y = self.y
         old_z = self.z
         self.x = self.x
@@ -99,14 +117,14 @@ class Point3D:
         self.z = old_y * math.sin(phi) + old_z * math.cos(phi)
     
     # rotation along the Y axis
-    def rotateXZ(self, rho: float):
+    def rotateXZ(self, rho: float) -> None:
         old_x = self.x
         old_z = self.z
         self.x = old_x * math.cos(rho) - old_z * math.sin(rho)
         self.y = self.y
         self.z = old_x * math.sin(rho) + old_z * math.cos(rho)
 
-    def rotateOnAllAxes(self, theta: float):
+    def rotateOnAllAxes(self, theta: float) -> None:
         old_x = self.x
         old_y = self.y
         self.x = old_x * math.cos(theta) - old_y * math.sin(theta)
@@ -122,13 +140,19 @@ class Point3D:
         self.x = old_x * math.cos(theta) - old_z * math.sin(theta)
         self.z = old_x * math.sin(theta) + old_z * math.cos(theta)
 
-    def rotateSpecified(self, theta, phi, rho):
+    def rotateSpecified(self, theta, phi, rho) -> None:
         self.rotateXY(theta)
         self.rotateYZ(phi)
         self.rotateXZ(rho)
 
+    #-----------------PRINT AND STRING-------------------------------
+    def __str__(self) -> str:
+        return f"Point Object: ({self.x}, {self.y}, {self.z})"
+
+
+
 class Line3D:
-    def __init__(self, point1: Point3D, point2: Point3D):
+    def __init__(self, point1: Point3D, point2: Point3D) -> None:
         t = 0.05 # parameterize a lot of points that will be our line (i guess determines the resolution??)
         self.point1 = point1
         self.point2 = point2
@@ -143,9 +167,12 @@ class Line3D:
                                           self.point1.z + t_incZ*i))
             
         # Wanna add methods to shrink, elongate, change, do a lot of stuff to a line
+
+    def __str__(self) -> str:
+        return f"Line Object: from {self.point1} to {self.point2}"
             
 class Object3D:
-    def __init__(self, vertex_list: list[Point3D], mapping_list: dict):
+    def __init__(self, vertex_list: list[Point3D], mapping_list: tuple[list[int]]) -> None:
         self.vertex_list = vertex_list
         self.mapping_list = mapping_list
 
@@ -153,19 +180,47 @@ class Object3D:
         # list of all the other indexes that it maps to, so that it can draw line to them
         # (it cannot map to itself)
 
-    def translate(self, x, y, z):
+        self.origin = sum(vertex_list, start=Point3D(0,0,0)) / len(vertex_list)
+
+    def __str__(self) -> str:
+        return f"Object3D Object:\nOrigin: {self.origin}\nPoint List: {[str(vertex) for vertex in self.vertex_list]}\nMapping List: {self.mapping_list}"
+
+    def translate(self, x: float, y: float, z: float) -> None:
+        self.origin.translate(x, y, z)
         for vertex in self.vertex_list:
             vertex.translate(x, y, z)
 
-    def rotate_amount(self, theta, phi, rho):
+    def rotate_amount(self, theta: float, phi: float, rho: float) -> None: # rotation about origin of the object.
         for vertex in self.vertex_list:
             vertex.translate(-self.origin.x, -self.origin.y, -self.origin.z)
             vertex.rotateSpecified(theta, phi, rho)
             vertex.translate(self.origin.x, self.origin.y, self.origin.z)
     
-    def rotate_around_axis(self, theta, phi, rho):
+    def rotate_around_axis(self, theta, phi, rho): # rotation about the origin of the coordinate system
         for vertex in self.vertex_list:
             vertex.rotateSpecified(theta, phi, rho)
+    
+    def generate_line_list(self) -> list[Line3D]:
+        line_list = []
+        for i in range(len(self.vertex_list)):
+            vertex = self.vertex_list[i]
+            map_list = self.mapping_list[i]
+
+            for index in map_list:
+                line_list.append(Line3D(vertex, self.vertex_list[index]))
+        return line_list
+
+    def output_display_map(self) -> list[Point3D]:
+        point_list = []
+        line_list = self.generate_line_list()
+        for line in line_list:
+            point_list = point_list + line.pointList
+        return remove_duplicates(point_list)
+    
+
+
+
+
 
 
 
@@ -341,16 +396,19 @@ class Map:
 display_map = Map()
 cube = Cube(Point3D(-4,0,6)) # last three are rotation arguments, will make default = 0 soon.
 cube2 = Cube(Point3D(4,0,6))
+triangle_3d = Object3D([Point3D(0,0,1), Point3D(-1,2,3), Point3D(2,1,2)], ([1,2],[0,2],[0,1]))
 
 
 def animationLoop(t):
     clear_terminal()
-    cube.rotate_amount(0.03, 0.05, 0.02)
-    cube2.rotate_amount(0.01, 0.05, 0.07)
-    cube_points = cube.outputDisplayMap()
-    cube2_points = cube2.outputDisplayMap()
-    final_points = remove_duplicates(cube_points + cube2_points)
-    display_map.pointsToImage(final_points)
+    triangle_3d.rotate_amount(0, 0, 0.05)
+    triangle_points = triangle_3d.output_display_map()
+
+    # cube.rotate_amount(0.03, 0.05, 0.02)
+    # cube2.rotate_amount(0.01, 0.05, 0.07)
+    # cube_points = cube.outputDisplayMap()
+    # cube2_points = cube2.outputDisplayMap()
+    display_map.pointsToImage(triangle_points)
 
 
 t = 0.001
