@@ -34,6 +34,49 @@ class Point3D:
         self.y = y
         self.z = z
 
+    #---------------------------POINT BASIC OPERATIONS-------------------------------------------
+    def __add__(self, other_point):
+        return Point3D(self.x + other_point.x, self.y + other_point.y, self.z + other_point.z)
+    
+    def __iadd__(self, other_point):
+        self.x += other_point.x
+        self.y += other_point.y
+        self.z += other_point.z
+    
+    def add(self, other_point):
+        self.x += other_point.x
+        self.y += other_point.y
+        self.z += other_point.z
+
+    def __sub__(self, other_point):
+        return Point3D(self.x - other_point.x, self.y - other_point.y, self.z - other_point.z)
+    
+    def __isub__(self, other_point):
+        self.x -= other_point.x
+        self.y -= other_point.y
+        self.z -= other_point.z
+    
+    def sub(self, other_point):
+        self.x -= other_point.x
+        self.y -= other_point.y
+        self.z -= other_point.z
+
+    def __matmul__(self, other_point): # Dot product
+        return (self.x * other_point.x) + (self.y * other_point.y) + (self.z * other_point.z)
+    
+    def dot(self, other_point):
+        return (self.x * other_point.x) + (self.y * other_point.y) + (self.z * other_point.z)
+
+    def __mul__(self, other_point): # Cross product
+        return Point3D((self.y * other_point.z) - (self.z * other_point.y),
+                       (self.z * other_point.x) - (self.x * other_point.z),
+                       (self.x * other_point.y) - (self.y * other_point.x))
+    
+    def cross(self, other_point):
+        return Point3D((self.y * other_point.z) - (self.z * other_point.y),
+                       (self.z * other_point.x) - (self.x * other_point.z),
+                       (self.x * other_point.y) - (self.y * other_point.x))
+
     def translate(self, x_t: float, y_t: float, z_t: float):
         self.x = self.x + x_t
         self.y = self.y + y_t
@@ -109,6 +152,22 @@ class Object3D:
         # The dictionary will contain a number of the index of that point, and then the
         # list of all the other indexes that it maps to, so that it can draw line to them
         # (it cannot map to itself)
+
+    def translate(self, x, y, z):
+        for vertex in self.vertex_list:
+            vertex.translate(x, y, z)
+
+    def rotate_amount(self, theta, phi, rho):
+        for vertex in self.vertex_list:
+            vertex.translate(-self.origin.x, -self.origin.y, -self.origin.z)
+            vertex.rotateSpecified(theta, phi, rho)
+            vertex.translate(self.origin.x, self.origin.y, self.origin.z)
+    
+    def rotate_around_axis(self, theta, phi, rho):
+        for vertex in self.vertex_list:
+            vertex.rotateSpecified(theta, phi, rho)
+
+
 
 
 
