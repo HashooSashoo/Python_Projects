@@ -199,6 +199,11 @@ class Object3D:
     def rotate_around_axis(self, theta, phi, rho): # rotation about the origin of the coordinate system
         for vertex in self.vertex_list:
             vertex.rotateSpecified(theta, phi, rho)
+
+    def generate_planes(self):
+        line_list = self.generate_line_list()
+
+        
     
     def generate_line_list(self) -> list[Line3D]:
         line_list = []
@@ -404,11 +409,12 @@ def animationLoop(t):
     triangle_3d.rotate_amount(0, 0, 0.05)
     triangle_points = triangle_3d.output_display_map()
 
-    # cube.rotate_amount(0.03, 0.05, 0.02)
+    cube.rotate_amount(0.03, 0.05, 0.02)
     # cube2.rotate_amount(0.01, 0.05, 0.07)
-    # cube_points = cube.outputDisplayMap()
+    cube_points = cube.outputDisplayMap()
     # cube2_points = cube2.outputDisplayMap()
-    display_map.pointsToImage(triangle_points)
+    all_points = cube_points + triangle_points
+    display_map.pointsToImage(all_points)
 
 
 t = 0.001
