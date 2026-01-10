@@ -162,17 +162,9 @@ def output_triangles(cycle_list):
         for index in range(len(triangles_with_no_duplicates) - 2):
             triangle_list.append(triangles_with_no_duplicates[index:index+3])
 
-        
-
     return triangle_list
 
-
 print(output_triangles([[0,1,2,3,4,5,6,7]]))
-
-
-
-def get_list_of_triangles(triangle_map: dict):
-    return find_cycles_from_spanning_tree(triangle_map)
 
 
 
