@@ -32,11 +32,70 @@ Order of points
 
 remove_duplicates = lambda x : list(dict.fromkeys(x))
 
+class Point2D:
+    def __init__(self, x: float, y: float, write_char="@", z_index=0.0):
+        self.x = x
+        self.y = y
+        self.write_char = write_char
+        self.z_index = z_index
+
+# adding this function to add priority for certain characters when removing duplicates in Point2D characters.
+# Now uses z-index (depth) as primary sorting criterion, with character priority as tiebreaker
+def remove_2d_point_duplicates(point_list: list[Point2D]) -> list[Point2D]:
+    PRIORITY_LIST = ['@','#','=','-','.']
+
+    # Group points by their (x, y) coordinates
+    # Round coordinates to avoid floating-point precision issues
+    coord_dict = {}
+    for point in point_list:
+        coord_key = (round(point.x, 6), round(point.y, 6))  # Round to 6 decimal places
+        if coord_key not in coord_dict:
+            coord_dict[coord_key] = []
+        coord_dict[coord_key].append(point)
+
+    # For each group, select the point with lowest z_index (closest to camera)
+    # If z_index is tied, use character priority as tiebreaker
+    result = []
+    for coord_points in coord_dict.values():
+        if len(coord_points) == 1:
+            result.append(coord_points[0])
+        else:
+            # Find the point with the lowest z_index (closest to camera)
+            best_point = coord_points[0]
+            best_z = best_point.z_index
+            best_char_priority = PRIORITY_LIST.index(best_point.write_char) if best_point.write_char in PRIORITY_LIST else len(PRIORITY_LIST)
+
+            for point in coord_points[1:]:
+                point_z = point.z_index
+                point_char_priority = PRIORITY_LIST.index(point.write_char) if point.write_char in PRIORITY_LIST else len(PRIORITY_LIST)
+
+                # Lower z_index = closer to camera = higher priority
+                # If z_index is very close (within 0.001), use character priority as tiebreaker
+                if point_z < best_z - 0.001:  # Significantly closer
+                    best_point = point
+                    best_z = point_z
+                    best_char_priority = point_char_priority
+                elif abs(point_z - best_z) <= 0.001:  # Same depth, use character priority
+                    if point_char_priority < best_char_priority:
+                        best_point = point
+                        best_z = point_z
+                        best_char_priority = point_char_priority
+
+            result.append(best_point)
+
+    return result
+
+
+    
+
+
 class Point3D:
-    def __init__(self, x: float, y: float, z: float) -> None:
+    def __init__(self, x: float, y: float, z: float, write_char="@") -> None:
         self.x = x
         self.y = y
         self.z = z
+
+        self.write_char = write_char
 
     #---------------------------POINT BASIC OPERATIONS-------------------------------------------
     def __add__(self, other_point: Self) -> Self:
@@ -175,7 +234,7 @@ class Line3D:
         self.pointList = []
         for i in range(int(1/self.t) + 1):
             self.pointList.append(Point3D(self.point1.x + self.t_inc[0]*i, self.point1.y + self.t_inc[1]*i,
-                                          self.point1.z + self.t_inc[2]*i))
+                                          self.point1.z + self.t_inc[2]*i, "@"))
             
         # Wanna add methods to shrink, elongate, change, do a lot of stuff to a line
 
@@ -210,6 +269,9 @@ class PlaneTriangle3D:
 
         # remove any duplicate points to preserve memory
         self.pointList = remove_duplicates(self.pointList)
+        for i in range(len(self.pointList)):
+            self.pointList[i].write_char = "-"
+
 
 
 class Object3D:
@@ -276,114 +338,15 @@ class Object3D:
         return remove_duplicates(point_list)
     
 
-
-
-
-
-
-
-
-
-
-
-
-    
-
-
-            
-
-class Cube():
-    def __init__(self, origin: Point3D = Point3D(0,0,2), sideLength: float = 3, 
-                 xRot: float = 0, yRot: float = 0, zRot: float = 0):
-        self.origin = origin
-        self.sideLength = sideLength
-
-        # Note the notation for the positions of the cube vertices (original placements)
-        # L = left, R - right (x axis)
-        # U = up, D = down (y axis)
-        # F = front, B = back (z axis)
-
-        self.vertexRUF = Point3D(origin.x + sideLength / 2, origin.y + sideLength / 2, origin.z + sideLength / 2)
-        self.vertexRUB = Point3D(origin.x + sideLength / 2, origin.y + sideLength / 2, origin.z - sideLength / 2)
-        self.vertexRDF = Point3D(origin.x + sideLength / 2, origin.y - sideLength / 2, origin.z + sideLength / 2)
-        self.vertexRDB = Point3D(origin.x + sideLength / 2, origin.y - sideLength / 2, origin.z - sideLength / 2)
-        self.vertexLUF = Point3D(origin.x - sideLength / 2, origin.y + sideLength / 2, origin.z + sideLength / 2)
-        self.vertexLUB = Point3D(origin.x - sideLength / 2, origin.y + sideLength / 2, origin.z - sideLength / 2)
-        self.vertexLDF = Point3D(origin.x - sideLength / 2, origin.y - sideLength / 2, origin.z + sideLength / 2)
-        self.vertexLDB = Point3D(origin.x - sideLength / 2, origin.y - sideLength / 2, origin.z - sideLength / 2)
-
-        self.vertexList = [self.vertexRUF, self.vertexRUB, self.vertexRDF, self.vertexRDB, self.vertexLUF, self.vertexLUB, self.vertexLDF, self.vertexLDB]
-
-        # The following is a bunch of manual connections for the lines in the cube :(
-        self.frontLine1 = Line3D(self.vertexRUF, self.vertexRDF)
-        self.frontLine2 = Line3D(self.vertexRUF, self.vertexLUF)
-        self.frontLine3 = Line3D(self.vertexRDF, self.vertexLDF)
-        self.frontLine4 = Line3D(self.vertexLUF, self.vertexLDF)
-
-        self.backLine1 = Line3D(self.vertexRUB, self.vertexRDB)
-        self.backLine2 = Line3D(self.vertexRUB, self.vertexLUB)
-        self.backLine3 = Line3D(self.vertexRDB, self.vertexLDB)
-        self.backLine4 = Line3D(self.vertexLUB, self.vertexLDB)
-
-        self.sideLine1 = Line3D(self.vertexRUF, self.vertexRUB)
-        self.sideLine2 = Line3D(self.vertexRDF, self.vertexRDB)
-        self.sideLine3 = Line3D(self.vertexLDF, self.vertexLDB)
-        self.sideLine4 = Line3D(self.vertexLUF, self.vertexLUB)
-
-        self.lineList = [self.frontLine1, self.frontLine2, self.frontLine3, self.frontLine4,
-                         self.backLine1, self.backLine2, self.backLine3, self.backLine4,
-                         self.sideLine1, self.sideLine2, self.sideLine3, self.sideLine4]
-
-    def reconstruct_lines(self):
-        self.frontLine1 = Line3D(self.vertexRUF, self.vertexRDF)
-        self.frontLine2 = Line3D(self.vertexRUF, self.vertexLUF)
-        self.frontLine3 = Line3D(self.vertexRDF, self.vertexLDF)
-        self.frontLine4 = Line3D(self.vertexLUF, self.vertexLDF)
-
-        self.backLine1 = Line3D(self.vertexRUB, self.vertexRDB)
-        self.backLine2 = Line3D(self.vertexRUB, self.vertexLUB)
-        self.backLine3 = Line3D(self.vertexRDB, self.vertexLDB)
-        self.backLine4 = Line3D(self.vertexLUB, self.vertexLDB)
-
-        self.sideLine1 = Line3D(self.vertexRUF, self.vertexRUB)
-        self.sideLine2 = Line3D(self.vertexRDF, self.vertexRDB)
-        self.sideLine3 = Line3D(self.vertexLDF, self.vertexLDB)
-        self.sideLine4 = Line3D(self.vertexLUF, self.vertexLUB)
-
-        # IMPORTANT: Update lineList with the new line objects!
-        self.lineList = [self.frontLine1, self.frontLine2, self.frontLine3, self.frontLine4,
-                         self.backLine1, self.backLine2, self.backLine3, self.backLine4,
-                         self.sideLine1, self.sideLine2, self.sideLine3, self.sideLine4]
-    
-    def rotate_amount(self, theta, phi, rho):
-        for vertex in self.vertexList:
-            vertex.translate(-self.origin.x, -self.origin.y, -self.origin.z)
-            vertex.rotateSpecified(theta, phi, rho)
-            vertex.translate(self.origin.x, self.origin.y, self.origin.z)
-        self.reconstruct_lines()
-
-    def translate(self, x, y, z):
-        self.origin.translate(x, y, z)
-        for vertex in self.vertexList:
-            vertex.translate(x, y, z)
-        self.reconstruct_lines()
-
-    def outputDisplayMap(self):
-        pointList = []
-        for line in self.lineList:
-            pointList = pointList + line.pointList
-        return remove_duplicates(pointList)
-
-
 # i know kinda jank that point2d isnt defined as a class but whatever lol
 # adding a scaling (FOV) factor
-def three_dim_to_two_dim(point3D, fov=60):
+def three_dim_to_two_dim(point3D: Point3D, fov=60) -> Point2D:
     fov_rad = math.radians(fov)
     scale = 1 / math.tan(fov_rad / 2)
 
     newX = (point3D.x / (point3D.z + 1)) * scale
     newY = (point3D.y / (point3D.z + 1)) * scale
-    return (newX, newY)
+    return Point2D(newX, newY, point3D.write_char, point3D.z)
 
 X_DIM = 100
 Y_DIM = 50
@@ -414,24 +377,24 @@ class Map:
         self.content = [[" " for _ in range(self.dimensions[0])] for _ in range(self.dimensions[1])]
 
     # We will assume that we will be using all of our coordinates in a [-2,2] <- X, [-2,2] <- Y range
-    def cartesian_to_poxels(self, coords: Tuple[float, float]) -> Tuple[int, int]:
+    def cartesian_to_poxels(self, coords: Point2D) -> Point2D:
         # Remember, [-2,2] -> {0,1,...,dimX-1} (for X), [-2,2] -> {0,1,...,dimY-1} (for Y)
-        scaledAndRoundedX = round((coords[0] + 2) * (self.dimensions[0] / 4)) # -> {0,1,...dimX-1}
+        scaledAndRoundedX = round((coords.x + 2) * (self.dimensions[0] / 4)) # -> {0,1,...dimX-1}
         # Flip Y axis: higher Y values should be at top (lower row indices)
-        scaledAndRoundedY = round((2 - coords[1]) * (self.dimensions[1] / 4)) # -> {0,1,...,dimY-1}
-        return (scaledAndRoundedY, scaledAndRoundedX)  # Return (row, col)
+        scaledAndRoundedY = round((2 - coords.y) * (self.dimensions[1] / 4)) # -> {0,1,...,dimY-1}
+        return Point2D(int(scaledAndRoundedX), int(scaledAndRoundedY), coords.write_char, coords.z_index)  # Return Point2D
     
     # Explanation of parameters
     #   listOfCoords: list of tuples that contain of the coords we are writing/deleting
     #   clearMap: list of boolean values the same size of listOfCoords. This tells up which of these coords involve
     #             us writing (bool = False), and which involve us deleting (bool = True)
-    def draw_points(self, listOfCoords: list[Tuple[float, float]]):
+    def draw_points(self, listOfCoords: list[Point2D]):
         self.clearMap()
-        listOfCoords = remove_duplicates(listOfCoords)
+        listOfCoords = remove_2d_point_duplicates(listOfCoords)
         for coord in listOfCoords:
             # Bounds checking to prevent index errors
-            if 0 <= coord[0] < self.dimensions[1] and 0 <= coord[1] < self.dimensions[0]:
-                self.content[coord[0]][coord[1]] = "@"
+            if 0 <= coord.x < self.dimensions[0] and 0 <= coord.y < self.dimensions[1]:
+                self.content[coord.y][coord.x] = coord.write_char
 
     
     def displayMap(self):
@@ -444,7 +407,7 @@ class Map:
     # Combination of all the methods above, takes in an array of 3D points and outputs a 2D output.
     def pointsToImage(self, points_list: list[Point3D]):
         points_2d = [three_dim_to_two_dim(point) for point in points_list if point.z >= 0]
-        filtered_points = [point for point in points_2d if ((abs(point[0]) <= 2) and (abs(point[1]) <= 2))]
+        filtered_points = [point for point in points_2d if (abs(point.x) <= 2) and (abs(point.y) <= 2)]
         poxelated_points = [self.cartesian_to_poxels(point) for point in filtered_points]
         self.draw_points(poxelated_points)
         self.displayMap()
@@ -452,19 +415,23 @@ class Map:
 # Now let's configure the terminal as a place to store our games.
 
 display_map = Map()
-cube = Cube(Point3D(-4,0,6)) # last three are rotation arguments, will make default = 0 soon.
-cube2 = Cube(Point3D(4,0,6))
+cube2 = Object3D([Point3D(1,1,1), Point3D(-1,1,1), Point3D(-1,-1,1), Point3D(1,-1,1),
+                  Point3D(1,1,3), Point3D(-1,1,3), Point3D(-1,-1,3), Point3D(1,-1,3)],
+                  ([1,3,4],[0,2,6],[1,3,6],[0,2,7],[0,5,7],[1,4,6],[2,5,7],[3,4,6]))
+cube2.translate(-2,0,2)
+
 triangle_3d = Object3D([Point3D(0,0,1), Point3D(-1,2,3), Point3D(2,1,2)], ([1,2],[0,2],[0,1]))
 
 
 def animationLoop(t):
     clear_terminal()
 
-    triangle_3d.rotate_amount(0, 0, 0.05)
+    triangle_3d.rotate_amount(0, 0.05, 0.05)
     triangle_points = triangle_3d.output_display_map()
 
-    cube.rotate_amount(0.03, 0.05, 0.02)
-    cube_points = cube.outputDisplayMap()
+    # cube.rotate_amount(0.03, 0.05, 0.02)
+    cube2.rotate_amount(0.03, 0.05, 0.02)
+    cube_points = cube2.output_display_map()
 
     all_points = cube_points + triangle_points
     display_map.pointsToImage(all_points)
