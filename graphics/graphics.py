@@ -1,8 +1,8 @@
 import math
 import time
-from typing import Tuple
-from typing import Self
-from graphics_helper_funcs import create_triangles
+from typing import Tuple # only for type hinting, no functionality
+from typing import Self # only for type hinting, no functionality
+from graphics_helper_funcs import create_triangles # my own script
 
 import keyboard
 
