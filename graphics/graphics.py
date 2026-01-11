@@ -2,6 +2,7 @@ import math
 import time
 from typing import Tuple
 from typing import Self
+from graphics_helper_funcs import create_triangles
 
 import keyboard
 
@@ -66,6 +67,12 @@ class Point3D:
 
     #-------------------VECTOR OPERATIONS----------------------------------------
 
+    def __abs__(self):
+        return math.sqrt((self.x)^2 + (self.y)^2 + (self.z)^2)
+    
+    def magnitude(self):
+        return math.sqrt((self.x)^2 + (self.y)^2 + (self.z)^2)
+    
     def __matmul__(self, other_point: Self) -> float: # Dot product
         return (self.x * other_point.x) + (self.y * other_point.y) + (self.z * other_point.z)
     
@@ -153,24 +160,58 @@ class Point3D:
 
 class Line3D:
     def __init__(self, point1: Point3D, point2: Point3D) -> None:
-        t = 0.05 # parameterize a lot of points that will be our line (i guess determines the resolution??)
+        self.t = 0.05 # parameterize a lot of points that will be our line (i guess determines the resolution??)
         self.point1 = point1
         self.point2 = point2
 
-        t_incX = (self.point2.x - self.point1.x) * t
-        t_incY = (self.point2.y - self.point1.y) * t
-        t_incZ = (self.point2.z - self.point1.z) * t
+        # define the slope of the line (a tuple of three floats)
+        self.slope = (self.point2.x - self.point1.x,
+                      self.point2.y - self.point1.y,
+                      self.point2.z - self.point1.z)
+
+        # creates the increment amount for each component to make the pointlist for the line.
+        self.t_inc = tuple(slope_element * self.t for slope_element in self.slope)
 
         self.pointList = []
-        for i in range(int(1/t) + 1):
-            self.pointList.append(Point3D(self.point1.x + t_incX*i, self.point1.y + t_incY*i,
-                                          self.point1.z + t_incZ*i))
+        for i in range(int(1/self.t) + 1):
+            self.pointList.append(Point3D(self.point1.x + self.t_inc[0]*i, self.point1.y + self.t_inc[1]*i,
+                                          self.point1.z + self.t_inc[2]*i))
             
         # Wanna add methods to shrink, elongate, change, do a lot of stuff to a line
 
+    def change_resolution(self, new_resolution: float):
+        if new_resolution >= 0.1:
+            print("Warning: Resolution might be too low. Consider values from 0.005 to 0.05.")
+        elif new_resolution <= 0.001:
+            print("Warning: Resolution might be too high. Consider values from 0.005 to 0.05.")
+        self.t = new_resolution
+
+    
     def __str__(self) -> str:
         return f"Line Object: from {self.point1} to {self.point2}"
-            
+    
+
+class PlaneTriangle3D:
+    def __init__(self, point1: Point3D, point2: Point3D, point3: Point3D):
+        # first put all the points in the object
+        self.point1 = point1
+        self.point2 = point2
+        self.point3 = point3
+
+        self.pointList = []
+
+        # then actually make the plane (its gonna be a collection of points, or to be more specific, a collection of lines)
+        # how we will make the points is we sweep a line from the point1-point2 segment to the point1-point3 segment
+        # then we sweep through the angle creating a bunch of new lines from point1 to the points in point2-point3
+        boundary_points = Line3D(self.point2, self.point3).pointList
+        for boundary_point in boundary_points:
+            line_points = Line3D(self.point1, boundary_point).pointList
+            self.pointList.extend(line_points)
+
+        # remove any duplicate points to preserve memory
+        self.pointList = remove_duplicates(self.pointList)
+
+
 class Object3D:
     def __init__(self, vertex_list: list[Point3D], mapping_list: tuple[list[int]]) -> None:
         self.vertex_list = vertex_list
@@ -199,11 +240,6 @@ class Object3D:
     def rotate_around_axis(self, theta, phi, rho): # rotation about the origin of the coordinate system
         for vertex in self.vertex_list:
             vertex.rotateSpecified(theta, phi, rho)
-
-    def generate_planes(self):
-        line_list = self.generate_line_list()
-
-        
     
     def generate_line_list(self) -> list[Line3D]:
         line_list = []
@@ -214,12 +250,29 @@ class Object3D:
             for index in map_list:
                 line_list.append(Line3D(vertex, self.vertex_list[index]))
         return line_list
+    
+    def generate_plane_list(self) -> list[PlaneTriangle3D]:
+        plane_list = []
+        triangle_list = create_triangles(self.mapping_list)
+
+        # Puts all the Point3D objects in an array to use
+        for triangle in triangle_list:
+            vertices = []
+            for vertex in triangle:
+                vertices.append(self.vertex_list[vertex])
+            
+            # append each plane to the plane list
+            plane_list.append(PlaneTriangle3D(vertices[0], vertices[1], vertices[2]))
+        return plane_list
 
     def output_display_map(self) -> list[Point3D]:
         point_list = []
         line_list = self.generate_line_list()
+        plane_list = self.generate_plane_list()
         for line in line_list:
             point_list = point_list + line.pointList
+        for plane in plane_list:
+            point_list = point_list + plane.pointList
         return remove_duplicates(point_list)
     
 
@@ -406,13 +459,13 @@ triangle_3d = Object3D([Point3D(0,0,1), Point3D(-1,2,3), Point3D(2,1,2)], ([1,2]
 
 def animationLoop(t):
     clear_terminal()
+
     triangle_3d.rotate_amount(0, 0, 0.05)
     triangle_points = triangle_3d.output_display_map()
 
     cube.rotate_amount(0.03, 0.05, 0.02)
-    # cube2.rotate_amount(0.01, 0.05, 0.07)
     cube_points = cube.outputDisplayMap()
-    # cube2_points = cube2.outputDisplayMap()
+
     all_points = cube_points + triangle_points
     display_map.pointsToImage(all_points)
 

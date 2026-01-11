@@ -84,34 +84,6 @@ def find_cycle_from_edge(u, v, parent):
 # This implements the ear-clipping method (I think thats what it is?)
 def create_triangle_map(cycle_list: list, mapping_list: dict):
 
-    '''
-    cycle_list: [0,1,2,3,4]
-    index = 0
-    index + 1
-    index - 1
-
-    load index + 1
-    [1]
-    []
-
-    nothing to put in connection list of 4
-
-    load index - 1
-    [1]
-    [4]
-
-    put 4 in connection list of 1, and 1 in connection list of 4
-
-    1: [0,2,4]
-    4: [0,3,1]
-
-    load index + 1
-    [1,2]
-    [3]
-
-    put 3 in connection list of 2, and 2 in connection list of 3
-    '''
-
     queue1 = []
     queue2 = []
 
@@ -163,6 +135,13 @@ def output_triangles(cycle_list):
             triangle_list.append(triangles_with_no_duplicates[index:index+3])
 
     return triangle_list
+
+def create_triangles(mapper):
+    cycles = find_cycles_from_spanning_tree(mapper)
+    return output_triangles(cycles)
+    
+
+
 
 print(output_triangles([[0,1,2,3,4,5,6,7]]))
 
