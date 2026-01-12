@@ -430,7 +430,7 @@ def animationLoop(t):
     triangle_points = triangle_3d.output_display_map()
 
     # cube.rotate_amount(0.03, 0.05, 0.02)
-    cube2.rotate_amount(0, 0.04, 0)
+    cube2.rotate_amount(0.03, 0.04, 0.02)
     cube_points = cube2.output_display_map()
 
     all_points = cube_points + triangle_points
