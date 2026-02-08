@@ -79,8 +79,11 @@ def main():
     print(f"  I_0 = {I_0_fit:.4e} A  (± {perr[0]:.4e})")
     print(f"  n   = {n_fit:.4f}      (± {perr[1]:.4f})")
 
-    # Generate smooth curve for plotting
-    V_smooth = np.linspace(V_fit.min(), V_fit.max(), 500)
+    # Extend the curve into forward bias so the exponential region is visible.
+    # Go a bit beyond the data range on both sides, with at least 0.5V forward.
+    V_min = min(V_fit.min(), -0.5)
+    V_max = max(V_fit.max(), 0.5)
+    V_smooth = np.linspace(V_min, V_max, 1000)
     I_smooth = diode_equation(V_smooth, I_0_fit, n_fit)
 
     # Plot
