@@ -12,7 +12,8 @@ V_T = k * T / q        # Thermal voltage (~25.7 mV)
 
 def diode_equation(V, I_0, n):
     """Shockley diode equation: I = I_0 * (exp(qV / nkT) - 1)"""
-    return I_0 * (np.exp(V / (n * V_T)) - 1)
+    exponent = np.clip(V / (n * V_T), -500, 500)
+    return I_0 * (np.exp(exponent) - 1)
 
 
 def load_csv(filepath):
@@ -47,18 +48,18 @@ def main():
 
     V_data, I_data = load_csv(filepath)
 
-    # Use only forward-bias data (V > 0) for fitting since the exponential
-    # behavior of the diode equation is dominant there.
-    mask = V_data > 0
-    V_fit = V_data[mask]
-    I_fit = I_data[mask]
+    # Fit on the full dataset — the Shockley equation covers both
+    # forward bias (exponential rise) and reverse bias (I ≈ -I_0).
+    V_fit = V_data
+    I_fit = I_data
 
     if len(V_fit) < 2:
-        print("Not enough forward-bias data points for fitting.")
+        print("Not enough data points for fitting.")
         return
 
-    # Initial guesses: I_0 ~ small leakage current, n ~ 1-2
-    p0 = [1e-12, 1.5]
+    # Initial guesses: I_0 ~ magnitude of reverse-bias current, n ~ 1-2
+    I_0_guess = np.abs(I_fit[V_fit < 0]).mean() if np.any(V_fit < 0) else 1e-12
+    p0 = [I_0_guess, 1.5]
 
     try:
         popt, pcov = curve_fit(
