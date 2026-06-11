@@ -13,7 +13,7 @@ import pandas as pd
 from scipy.io import loadmat
 
 # ── CONFIG ────────────────────────────────────────────────────────────────────
-INPUT_MAT  = "/Users/ZHash/Downloads/p804_fiber3_dynamics.mat"   # <-- change this to your .mat file path
+INPUT_MAT  = "/Users/ZHash/Downloads/file_name.mat"   # <-- change this to your .mat file path
 OUTPUT_CSV = "output.csv"      # <-- change this to your desired output path
 # ─────────────────────────────────────────────────────────────────────────────
 
