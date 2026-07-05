@@ -4,8 +4,6 @@ from typing import Tuple # only for type hinting, no functionality
 from typing import Self # only for type hinting, no functionality
 from graphics_helper_funcs import create_triangles # my own script
 
-import keyboard
-
 
 
 def clear_terminal() -> None:
